@@ -1,0 +1,420 @@
+---
+title: "Assignment 3"
+author: "Eun Ho Kim(12455415), Younjoo Mo (12475440)"
+date: "6/20/2020"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+
+```
+
+
+# Question 1
+
+```{r}
+winequality=read.csv('winequality-red.csv',header=TRUE, sep=';')
+```
+
+Before we start analyze, we first have to determine is there any missing value or N/A.
+
+```{r}
+sum(is.na(winequality))
+```
+
+There is no N/A.
+
+```{r}
+dim(winequality)
+
+```
+
+There are 12 variables for winequality.
+
+Also, we have to check whether predictor variables are characteristic or numerical.
+
+```{r}
+sapply(winequality,class,simplify = TRUE, USE.NAMES = TRUE)
+
+```
+
+```{r}
+a=ggplot(data=winequality)
+a+geom_histogram(aes(x=fixed.acidity), binwidth = 1)
+a+geom_histogram(aes(x=volatile.acidity),binwidth = 0.1)
+a+geom_histogram(aes(x=citric.acid),binwidth = 0.1)
+a+geom_histogram(aes(x=residual.sugar),binwidth = 1)
+a+geom_histogram(aes(x=chlorides),binwidth = 0.01)
+a+geom_histogram(aes(x=free.sulfur.dioxide),binwidth = 1)
+a+geom_histogram(aes(x=total.sulfur.dioxide),binwidth = 5)
+a+geom_histogram(aes(x=density),binwidth = 0.001)
+a+geom_histogram(aes(x=pH),binwidth = 0.1)
+a+geom_histogram(aes(x=sulphates),binwidth = 0.1)
+a+geom_histogram(aes(x=alcohol),binwidth = 1)
+```
+
+
+
+# Question 2
+
+```{r}
+cor(select(winequality, fixed.acidity, volatile.acidity, citric.acid, residual.sugar,chlorides, free.sulfur.dioxide, total.sulfur.dioxide, density, pH, sulphates, alcohol))
+
+```
+
+```{r}
+pairs(~fixed.acidity+ volatile.acidity+ citric.acid+ residual.sugar+chlorides+ free.sulfur.dioxide+ total.sulfur.dioxide+ density+ pH+ sulphates+ alcohol, data=winequality)
+
+```
+
+Partially correlated=fixed.acidity&citric.acid, fixed.acidity&desnsity, fixed.acidity&pH, free.sulfur.dioxide&total.sulfur.dioxide
+
+Uncorrelated=volatile.acidity&residual.sugar, residual.sugar&sulphates, cholorides&free.sulfur.dioxide
+
+# Question 3
+
+```{r}
+winequality_without_quality=winequality[,-12]
+winequality_scaled=scale(winequality_without_quality)
+winequality_pca=prcomp(winequality_scaled)
+winequality_pca
+```
+
+## Question a
+
+```{r}
+winequality_pca$sdev^2
+
+```
+
+## Question b
+
+```{r}
+summary(winequality_pca)
+```
+
+Or we can also calculate by 
+
+```{r}
+winequality_pca$sdev^2/11
+
+```
+
+## Question c
+
+```{r}
+for (i in 1:11) {
+  sdev1=round(winequality_pca$sdev, digits=3)
+  e_i_j=matrix((data=round(winequality_pca$rotation, digits=3)),11,11)
+  for (j in 1:11) {
+    cat(sprintf('Corr(Y[%d],Z[%d])=%f\n',i,j,sdev1[i]*e_i_j[j,i]))
+  }
+}
+```
+
+
+# Question 4
+
+## Question a
+
+```{r}
+winequality_pca$sdev^2
+
+```
+
+4components but do not dismiss 5th component.
+
+## Question b
+
+```{r}
+summary(winequality_pca)
+
+```
+
+6~7 components
+
+## Question c
+
+```{r}
+screeplot(winequality_pca,type='lines')
+
+```
+
+5 components
+
+## Question d
+
+```{r}
+mycorr=function(i,j){
+  sdev1=round(winequality_pca$sdev, digits=3)
+  e_i_j=matrix((data=round(winequality_pca$rotation, digits=3)),11,11)
+  sdev1[i]*e_i_j[j,i]
+  }
+  
+```
+
+1. fixed acidity
+
+If we choose 1 components,
+'Corr(Y1,Z1)^2'
+This can be rewritten by our own formula 
+'mycorr(1,1)^2'
+And this can be rewritten as 
+```{r}
+p=c(1)
+sum(mycorr(p,1)^2)
+
+```
+It is higher than 0.5, so we choose 1 component for communality.
+
+
+2. volatile acidity 
+
+If we choose 3 components,
+'Corr(Y1,Z2)^2+Corr(Y2,Z2)^2+Corr(Y3,Z2)^2'
+This can be rewritten by our own formula 
+'mycorr(1,2)^2+mycorr(2,2)^2+mycorr(3,2)^2'
+And this can be rewritten as 
+```{r}
+p=c(1,2)
+sum(mycorr(p,2)^2)
+```
+
+Which is smaller than 0.5
+
+If we choose 3 components,
+'Corr(Y1,Z2)^2+Corr(Y2,Z2)^2+Corr(Y3,Z2)^2'
+This can be rewritten by our own formula 
+'mycorr(1,2)^2+mycorr(2,2)^2+mycorr(3,2)^2'
+And this can be rewritten as 
+
+```{r}
+p=c(1,2,3)
+sum(mycorr(p,2)^2)
+```
+
+It is higher than 0.5, so we choose 3 components for communality.
+
+After now, we will skip the procedure.
+
+3. citric acid
+
+If we choose 1 component,
+
+```{r}
+p=c(1)
+sum(mycorr(p,3)^2)
+```
+
+It is higher than 0.5, so we choose 1 component for communality.
+
+4. residual sugar
+```{r}
+p=c(1,2,3,4)
+sum(mycorr(p,4)^2)
+```
+
+```{r}
+p=c(1,2,3,4,5)
+sum(mycorr(p,4)^2)
+```
+
+It is higher than 0.5, so we choose 5 components for communality.
+
+
+5. chlorides
+
+```{r}
+p=c(1,2,3)
+sum(mycorr(p,5)^2)
+```
+
+```{r}
+p=c(1,2,3,4)
+sum(mycorr(p,5)^2)
+```
+
+It is higher than 0.5, so we choose 4 components for communality.
+
+
+6. free sulfur dioxide
+
+```{r}
+p=c(1)
+sum(mycorr(p,6)^2)
+```
+
+```{r}
+p=c(1,2)
+sum(mycorr(p,6)^2)
+```
+It is higher than 0.5, so we choose 2 components for communality.
+
+
+7. total sulfur dioxide 
+
+```{r}
+p=c(1)
+sum(mycorr(p,7)^2)
+```
+
+```{r}
+p=c(1,2)
+sum(mycorr(p,7)^2)
+```
+
+It is higher than 0.5, so we choose 2 components for communality.
+
+
+8. density
+```{r}
+p=c(1)
+sum(mycorr(p,8)^2)
+```
+```{r}
+p=c(1,2)
+sum(mycorr(p,8)^2)
+```
+
+It is higher than 0.5, so we choose 2 components for communality.
+
+
+
+9. pH
+
+```{r}
+p=c(1)
+sum(mycorr(p,9)^2)
+```
+
+It is higher than 0.5, so we choose 1 component for communality.
+
+
+10. sulphates
+
+```{r}
+p=c(1,2)
+sum(mycorr(p,10)^2)
+```
+
+```{r}
+p=c(1,2,3,4)
+sum(mycorr(p,10)^2)
+```
+
+It is higher than 0.5, so we choose 4 components for communality.
+
+
+11. alcohol
+
+```{r}
+p=c(1,2)
+sum(mycorr(p,11)^2)
+```
+
+```{r}
+p=c(1,2,3)
+sum(mycorr(p,11)^2)
+```
+
+It is higher than 0.5, so we choose 3 components for communality.
+
+
+For the conclusion,if we see the results, for components 5, all communality for variables from Z1~Z11 exceed more than 0.5.
+
+# Question 5
+
+```{r}
+library(ggplot2)
+library(ggfortify)
+autoplot(winequality_pca, loadings=TRUE, loadings.label=TRUE, loadings.label.size=4)+xlim(-0.1,0.1)
+
+```
+
+In the biplot, we could see that total.sulfar.dioxide and free.sulfar.dioxide tends to move together in PC2 . We can check this by looking at the below table, that this is true, by checking their sign(both of the values are positive).
+
+```{r}
+round(winequality_pca$rotation[,1:5], digits = 3)
+
+```
+
+For PC1, fixed.acidity and citric.acid seems to influence positively on quality of wine.
+
+For PC2,if free sulfur dioxide and total sulfur dioxide increase, the winequality also increses.
+
+For PC3,volatile acidity influence positively, but for alchole, it affects negatively for wine quality.
+
+In PC4, among all the values, chlorides has the most highest absolute value. It could be interpreted as chlorides is the important component here. Not only chlorides but also sulphates seems to affect goood quality of wine.
+
+In PC5, residual.sugar has absolute value of 0.732. It seems that residual sugar infulence negativelty to winequality.
+
+
+# Question 6
+
+## Question a
+
+PCA can eliminate muticollinearity by replacing the original data by components and by excluding some of the low-variance principal components and . Moreover, PCR handle variables that are correlated by using methods such as dimension-reduction methods.However, PCA ignores the target varible and interpretability of model can be lowered.
+
+## Question b
+
+Yes, absolutely! The linear regression model assumption is reasonable. It is because that each variables are independent and normaly distributed. Moreover, our samples satisfy two conditions which are linearity and homoscedasticity.
+We were able to make a linear regression model of quality versus predictors which will be introduced in section (c).
+
+## Question c
+
+```{r}
+attach(winequality)
+lquality=log(quality)
+reg=lm(lquality~1+fixed.acidity+volatile.acidity+ citric.acid+residual.sugar + chlorides+free.sulfur.dioxide +total.sulfur.dioxide+density+ pH+sulphates+alcohol)
+reg
+```
+
+Therefore, our regression model is 
+
+```{r}
+y=2.3093963+0.0022816*fixed.acidity-0.2134468*volatile.acidity-0.0441610*citric.acid+0.0014242*residual.sugar-0.3352020*chlorides+0.0008208*free.sulfur.dioxide-0.0005335*total.sulfur.dioxide-0.7706234*density-0.0890447*pH+0.1560676*sulphates+0.0491903*alcohol   
+```
+
+
+```{r}
+k=5
+cv_error=numeric(length=k)
+set.seed(1234)
+folds=sample(rep(1:k, length=nrow(winequality)))
+for (i in 1:k) {
+  train=winequality[folds!=i,]
+  test=winequality[folds==i,]
+  m=lm(data=train)
+  test=mutate(test,pred=predict(m,newdata=test))
+  cv_error[i]=summarize(test, error=mean((y-pred)^2))
+  
+}
+cv_error_estimate=mean(cv_error)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

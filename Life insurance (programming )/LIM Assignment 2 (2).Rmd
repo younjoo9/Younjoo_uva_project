@@ -1,0 +1,56 @@
+---
+title: "Life Insurance Mathematics: Assignment 1"
+author: 
+- Hyunkyun Chung(12527742), Jagathiswarra Rao Raja Rao(12542660)
+- Younjoo Mo(12475440), Thomas Rigny(12914347)
+date: '13 September 2020'
+output: html_document
+---
+Because we are asked to create visually appealing graphics, we give the essence of our skills.  
+We worked with data from Republic of Korea since it is thought to be having a moderate dynamics in its demographics and providing credible statistics.  
+(a).
+```{r warning = FALSE, message=FALSE}
+life=read.table("mltper_1x1.txt", header = TRUE, skip = 1)
+life=apply(life,c(1,2),function(x){as.numeric(x)})
+na=which(is.na(life))
+life[na]=110
+life=as.data.frame(life)
+library(ggplot2)
+library(gganimate)
+library(gifski)
+library(transformr)
+
+p1=ggplot(life, aes(x=Age,y=mx))+geom_line(aes(colour=Year))
+anim1=p1+transition_states(Year,transition_length = 2, state_length = 1)
+anim1=anim1+ggtitle('mx against Age, Year {closest_state}',
+                  subtitle = 'Frame {frame} of {nframes}')
+animate(anim1,fps=5, renderer = gifski_renderer())
+```
+
+(b).
+```{r warning = FALSE, message=FALSE}
+p2=ggplot(life, aes(x=Year,y=mx))+geom_line(aes(colour=Age))
+anim2=p2+transition_states(Age,transition_length = 1, state_length = 1)
+anim2=anim2+ggtitle('mx against Year, Age {closest_state}',
+                    subtitle = 'Frame {frame} of {nframes}')
+animate(anim2,fps=5,nframes = 220, renderer = gifski_renderer())
+```
+
+(c).
+```{r warning = FALSE, message=FALSE}
+p3=ggplot(life, aes(x=Age,y=exp(-Age*mx)))+geom_line(aes(colour=Year))
+anim3=p3+transition_states(Year,transition_length = 2, state_length = 1)
+anim3=anim3+ggtitle('Newborn survival function, Year {closest_state}',
+                    subtitle = 'Frame {frame} of {nframes}')
+animate(anim3,fps=5, renderer = gifski_renderer())
+```
+
+(d).
+Here, we examine "ln(dx)" versus "age x".
+```{r warning = FALSE, message=FALSE}
+p4=ggplot(life, aes(x=Year,y=log(dx)))+geom_line(aes(colour=Age))
+anim4=p4+transition_states(Age,transition_length = 1, state_length = 1)
+anim4=anim4+ggtitle('Age {closest_state}',
+                    subtitle = 'Frame {frame} of {nframes}')
+animate(anim4,fps=5,nframes = 220, renderer = gifski_renderer())
+```

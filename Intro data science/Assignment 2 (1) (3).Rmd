@@ -1,0 +1,307 @@
+---
+title: "Assignment 2"
+author: "Eun Ho Kim(12455415), Younjoo Mo (12475440)"
+date: "6/13/2020"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Question 1
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+load('credit.rda')
+```
+
+
+Before we start, if we look at the credit table, installment_rate, residence_since, existing_credits and num_dependents are coded with numbers like 1,2,3...., which are inconsistent with the data description.
+Therefore, we want to change these codes to be same as data description.
+
+```{r}
+credit$installment_rate=recode(credit$installment_rate,'1'='A81','2'='A82', '3'='A83','4'='A84')
+credit$residence_since=recode(credit$residence_since,'1'='A71','2'='A73','3'='A74','4'='A75')
+credit$existing_credits=recode(credit$existing_credits,'1'='A161','2'='A162','3'='A163','4'='A164')
+credit$num_dependents=recode(credit$num_dependents, '1'='A181' , '2'='A182')
+```
+
+Also, we have to determine whether there exist N/A on data description
+```{r}
+sum(is.na(credit))
+```
+
+There is no N/A on data description, so we can just analyze data.
+
+Now, we want to know which variables are categorical and which are numerical.
+
+```{r}
+sapply(credit,class,simplify = TRUE, USE.NAMES = TRUE)
+
+```
+
+Here, "factor" and "character" are categorical variables, "interger" is numerical variable. 
+
+By using summary function, we can analyze variables by numerically.
+
+```{r}
+summary(credit)
+
+```
+
+But this omit the details of purpose,installment_rate,residence_since, existing_credits and num_dependents. So we also added details of them.
+
+```{r}
+summary(credit$purpose)
+
+```
+
+
+```{r}
+table(credit$installment_rate)
+
+```
+
+
+```{r}
+table(credit$residence_since)
+
+```
+
+
+```{r}
+table(credit$existing_credits)
+
+```
+
+```{r}
+table(credit$num_dependents)
+
+```
+
+Then, we will analyze variables graphically by using ggplot function.
+
+```{r}
+a=ggplot(data=credit)
+
+```
+
+
+```{r}
+a+geom_bar(aes(checking_status))
+a+geom_histogram(aes(duration), binwidth = 5)
+a+geom_bar(aes(credit_history))
+a+geom_bar(aes(purpose))
+a+geom_histogram(aes(credit_amount), binwidth = 500)
+a+geom_bar(aes(savings))
+a+geom_bar(aes(employment))
+a+geom_bar(aes(installment_rate))
+a+geom_bar(aes(personal_status))
+a+geom_bar(aes(other_parties))
+a+geom_bar(aes(residence_since))
+a+geom_bar(aes(property_magnitude))
+a+geom_histogram(aes(age), binwidth = 1)
+a+geom_bar(aes(other_payment_plans))
+a+geom_bar(aes(housing))
+a+geom_bar(aes(existing_credits))
+a+geom_bar(aes(job))
+a+geom_bar(aes(num_dependents))
+a+geom_bar(aes(telephone))
+a+geom_bar(aes(foreign_worker))
+a+geom_bar(aes(class))
+```
+
+
+# Question 2
+
+Duration
+```{r}
+a+geom_histogram(aes(x=duration, fill=class), position='stack', binwidth = 5)
+
+a+geom_histogram(aes(x=duration, fill=class), position='fill', binwidth = 5)
+a+geom_histogram(aes(x=duration, fill=class), position='dodge', binwidth = 5)
+table(credit$class,credit$duration)
+
+```
+Until the duration of 40, the proportion of 'good' class is larger than 50 percent.
+After the duration of 40, the proportion of class 'good' decreased, but we have to notice that the number of sample is much smaller comparing with duration of 0~40 ( except duration around 50).
+Duration between 5~15 has the largest number of sample and also class 'good'.
+
+
+credit_history
+
+```{r}
+a+geom_bar(aes(x=credit_history, fill=class), position='stack')
+a+geom_bar(aes(x=credit_history, fill=class), position='fill')
+a+geom_bar(aes(x=credit_history, fill=class), position='dodge')
+table(credit$credit_history)
+```
+
+The proportion of class 'good' monotonly increased from A30 to A34.
+It is reasonable because people who paid back duly normally have good credit and good class.
+More than 55 percent of consumer who delayed in paying off or having critical account has 'bad' class. 
+
+
+credit_amount
+```{r}
+a+geom_histogram(aes(x=credit_amount, fill=class), position='stack', binwidth = 500)
+a+geom_histogram(aes(x=credit_amount, fill=class), position='fill', binwidth = 500)
+a+geom_histogram(aes(x=credit_amount, fill=class), position='dodge', binwidth = 500)
+```
+By looking at the normalized histogram of credit_amount, we found the tendency for people with low credit amount are more likely to have good class. 
+
+
+Age
+
+```{r}
+a+geom_histogram(aes(x=age, fill=class), position='stack', binwidth = 1)
+a+geom_histogram(aes(x=age, fill=class), position='fill', binwidth = 1)
+a+geom_histogram(aes(x=age, fill=class), position='dodge', binwidth = 1)
+
+```
+It was difficult to discern the proportion of class(good/bad ) varies across age by using the histogram of age with class overlay. But by observing normalized histogram, we were able to find out the tendency for people with higher age have higher proportion of good class
+
+
+Foreign worker
+
+```{r}
+a+geom_bar(aes(x=foreign_worker, fill=class), position='stack')
+a+geom_bar(aes(x=foreign_worker, fill=class), position='fill')
+a+geom_bar(aes(x=foreign_worker, fill=class), position='dodge')
+table(credit$foreign_worker)
+
+```
+We were able to notice the tendency for people with A202 to have good class. 
+
+
+# Question 3
+
+Contingency table and pie chart for credit history
+
+```{r}
+mytable_class_credit_history=table(credit$class, credit$credit_history)
+mytable_class_credit_history
+```
+
+```{r}
+pie(table(filter(credit, credit_history=='A30')$class), main='A30:delay in paying off in the past')
+pie(table(filter(credit, credit_history=='A31')$class), main='A31:critical account')
+pie(table(filter(credit, credit_history=='A32')$class), main='A32:no credits taken or all credits paid back duly')
+pie(table(filter(credit, credit_history=='A33')$class), main='A33:existing credits paid back duly till now')
+pie(table(filter(credit, credit_history=='A34')$class), main='A34:all credits at this bank paid back duly')
+
+```
+
+Contingency table and pie chart for foreign worker
+
+```{r}
+mytable_class_foregin_worker=table(credit$class, credit$foreign_worker)
+mytable_class_foregin_worker
+```
+
+```{r}
+par(mfrow=c(1,2))
+pie(table(filter(credit, foreign_worker=='A201')$class), main='Foreign worker')
+pie(table(filter(credit, foreign_worker=='A202')$class), main='Not foreign worker')
+```
+
+Conditional probability of a customer being a good payer, given each of predictors individually
+
+```{r}
+prop.table(mytable_class_credit_history,2)
+
+```
+
+Probability of good class given that credit history is A30(delay in paying off in the past): 0.3750000
+
+Probability of good class given that credit history is A31(critical account) : 0.4285714
+
+Probability of good class given that credit history is A32(no credits taken or all credits paid back duly) : 0.6811321
+
+Probability of good class given that credit history is A33(existing credits paid back duly till now) : 0.6818182
+
+Probability of good class given that credit history is A34(all credits at this bank paid back duly) : 0.8293515
+
+
+```{r}
+prop.table(mytable_class_foregin_worker,2)
+
+```
+
+Probability of good class given that consumer is foreign worker :0.6926272
+
+Probability of good class given that consumer is not foreign worker :0.8918919
+
+# Question 4
+
+```{r}
+cor(select(credit, duration, credit_amount))
+pairs(~duration+credit_amount, data=credit)
+```
+
+```{r}
+a + geom_point(aes(x=duration, y=credit_amount))
+```
+
+
+## Question a
+
+It is certainly true that if the duration increases, the range of the credit_amount and also frequency of credit amount higher than 10,000 increases.
+Also, correlation between duration and credit_amount is 0.6249842 which is close to 1 rather than 0.
+Therefore, we can conclude that the two variables are correlated but not too strongly.
+
+We will not drop duration or credit_amount.
+Although using correlated variables can wrongly emphasize more data inputs and creates unreliable results, but duration or credit amount is not highly strongly correlated. Moreover, there is no sufficient reasaon to completely exclude the variable from the model and hypothesis test can be used to determine other factors.
+
+## Question b
+
+```{r}
+a + geom_point(aes(x=duration,y=credit_amount, shape = class,
+color = class))
+```
+
+-There exists multivariate relationship among two variables and class. People with both low credit amount and duration tend to have higher proportion of good class.
+
+# Question 5
+
+```{r}
+a+geom_bar(aes(installment_rate))
+
+```
+
+After a small increase in the number of people in A82(installment rate between 25 and 35) compared with the sub group A81, the number of people decreased in A83(installment rate between 20 and 25)  .
+We first guessed as installment rate decreases, the number of people will decrease. So we predicted that the number of people in last subgroup A84 should decrease. 
+But the box plot gave us surprising result. The number of people dramatically increased as the installment rate was less than 20 . Therefore, we chose this variable, installment_rate which we want to further investigate in.
+We were curious about the last sub group “Why did the number of people sharply increased when installment rate is less than 20?”
+
+
+# Question 6
+
+The interesting fact that we found in the dataset is about personal stauts.
+If we first look at the data description, personal status is divided by 5 standards.
+A91:Male:divorced, A92:female:divorced or married, A93:male:single:, A94:male:married, A95:female: single.
+However, it is not that logical.
+For male, there are three indicator which are 1.divorced, 2.married or 3.single.
+For female, there are only two indicator which are 1.divorced/married and 2.single.
+There is no reason to combine divorced female and married female in same category. Divorced female and married female can have different class and they can influence to other variables significantly.
+
+Moreover, if we look at the table,
+
+```{r}
+table(credit$personal_status)
+```
+A95, which is female:single is missing.
+It is impossible that there is no female:single consumer in German credit.
+Therefore, we can make two assumption.
+First, female single is combined with A92: female: divorced or married.
+Secondly, someone made mistake while collecting data and female:single spread out to all indicators:A91~A94.
+
+
+
+
+
+

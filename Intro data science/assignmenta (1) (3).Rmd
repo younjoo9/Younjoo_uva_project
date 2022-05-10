@@ -1,0 +1,232 @@
+---
+title: "Assignment 1"
+author: "Eun Ho Kim(12455415), Younjoo Mo (12475440)"
+date: "6/5/2020"
+output:
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Question 1
+Before we start, we have to write three codes 
+
+
+```{r}
+library(tidyverse)
+library(Ecdat)
+data(Housing)
+```
+
+```{r Housing}
+dim(Housing)
+```
+There exist 546 rows and 12 columns.
+
+To check whether there exist some missing values,
+```{r}
+sum(is.na(Housing))
+```
+
+Therefore, there are no missing values
+
+# Question 2
+```{r}
+boxplot(Housing$lotsize, main='Box plot of lotsize', horizontal=TRUE)
+
+```
+
+Here, we can find outliers on the right side of the box plot.
+
+```{r}
+a=ggplot(data=Housing, mapping=aes(x=lotsize))
+a+geom_histogram(bins=20)+xlab('lotsize')
+```
+
+Here, we can find outliers on approximately 16,000
+
+
+# Question 3
+
+## Question a
+
+Z score method
+```{r}
+Z_lotsize=(Housing$lotsize-mean(Housing$lotsize))/sd(Housing$lotsize)
+```
+
+By using Z-score, if Z score is bigger than 3 or smaller than -3, it is outlier!
+```{r}
+filter(Housing, Z_lotsize>3| Z_lotsize< -3)
+
+```
+
+## Question b
+IQR method
+```{r}
+summary(Housing$lotsize)
+
+```
+Here, we can find Q1=3600 and Q3=6360.
+
+By using IQR method, if lotsize is smaller than $Q1-(1.5*IQR)$ or bigger than 
+$Q3+(1.5*IQR)$, it is an outlier.
+
+```{r}
+Q1=3600
+Q3=6360
+IQR=Q3-Q1
+A=Q1-(1.5*IQR)
+A
+B=Q3+(1.5*IQR)
+B
+filter(Housing,lotsize< -540 | lotsize>10500)
+```
+
+
+# Question 4
+
+## Question a
+
+```{r}
+summarise(Housing,
+          mean_price=mean(price),
+          median_price=median(price),
+          sd_price=sd(price),
+          mean_absolute_deviation_price=sum(abs(Housing$price-mean(Housing$price)))/nrow(Housing),
+          IQR_price=quantile(Housing$price,0.75)-quantile(Housing$price,0.25),
+          skewness_price=3*(mean(Housing$price)-median(Housing$price))/sd(Housing$price))
+
+```
+
+
+## Question b
+```{r}
+Z_price=(Housing$price-mean(Housing$price))/sd(Housing$price)
+skewness_Z_price=3*(mean(Z_price)-median(Z_price))/(sd(Z_price))
+skewness_price=3*(mean(Housing$price)-median(Housing$price))/(sd(Housing$price))
+```
+
+```{r}
+skewness_Z_price
+```
+
+```{r}
+skewness_price
+```
+
+The skewness of price and z scores are same. 
+It implies that Z score does not change skewness.
+
+# Question 5
+
+## Question a
+```{r}
+qqnorm(Housing$price)
+qqline(Housing$price, col='red')
+```
+
+
+## Question b
+
+From 5-a, we found out that housing prices are not normally distributed using a normal Q-Q plot. 
+In order to achieve normality, 
+we tried 
+
+Z_score normalization
+```{r}
+qqnorm(Z_price)
+qqline(Z_price, col='blue')
+```
+
+
+
+min-max normalization
+```{r}
+price_min_max=(Housing$price-min(Housing$price))/(max(Housing$price)-min(Housing$price))
+qqnorm(price_min_max)
+qqline(price_min_max, col='green')
+
+```
+
+
+log normalization
+```{r}
+qqnorm(log(Housing$price))
+qqline(log(Housing$price),col='purple')
+
+```
+
+root X ($\sqrt{X}$) transformation method
+
+```{r}
+qqnorm(sqrt(Housing$price))
+qqline(sqrt(Housing$price),col='orange')
+```
+
+$\frac{1}{\sqrt{x}}$ transformation method
+
+```{r}
+qqnorm(1/sqrt(Housing$price))
+qqline(1/sqrt(Housing$price),col='yellow')
+```
+
+As a result, we can analyze graphs by using QQ plot interpretation. 
+Log normalization makes observations most likely fall onto a qqline, which means that the data comes from a normal population.
+
+# Question 6
+
+## Question a
+```{r}
+Housing$bedrooms_dummy=1*(Housing$bedrooms>'3')
+
+```
+
+
+```{r}
+mutate(Housing,bedrooms_dummy)
+
+```
+
+## Question b
+```{r}
+filter(Housing,bedrooms_dummy==1, prefarea=='yes' )
+
+```
+
+
+## Question c
+```{r}
+mean_average_price=mean(Housing$price)
+mean_price_dummy1_prefareaYes=mean(filter(Housing,bedrooms_dummy==1, prefarea=='yes' )$price)
+mean_average_price
+mean_price_dummy1_prefareaYes
+
+```
+
+Average price of housing with more than 3 bedrooms and located in the preferred neighborhood of the city are much more expensive than average houses.
+
+# Question 7
+
+## Question a
+```{r}
+(max(Housing$lotsize)-min(Housing$lotsize))/3
+
+
+Housing$lotsize_bin_equal_width=cut_width(Housing$lotsize, width=4850)
+head(Housing$lotsize_bin_equal_width)
+table(Housing$lotsize_bin_equal_width)
+```
+
+
+## Question b
+```{r}
+Housing$lotsize_bin_equal_freq=cut_number(Housing$lotsize,n=4)
+table(Housing$lotsize_bin_equal_freq)
+
+```
+
+

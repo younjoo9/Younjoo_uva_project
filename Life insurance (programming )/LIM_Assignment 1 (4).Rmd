@@ -1,0 +1,84 @@
+---
+title: "Life Insurance Mathematics: Assignment 1"
+author: 
+- Hyunkyun Chung(12527742), Jagathiswarra Rao Raja Rao(12542660)
+- Younjoo Mo(12475440), Thomas Rigny(12914347)
+date: '6 September 2020'
+output: pdf_document
+---
+Q2.
+With all the given information, we can calculate the yearly loan payments from t=0 to t=23 as follows:
+```{r}
+loans <- c(10000, 20000, 30000, rep(0, 20))
+payments <- c(rep(0,3), 1, cumprod(0.95*rep(1,19)))
+interest <- c(rep(0.06, 5), rep(0.07, 5), rep(0.08, 12))
+yearly_discount_factor <- (1+interest)^(-1)
+discount_factors <- c(1, cumprod(yearly_discount_factor))
+
+pv_payments <- payments * discount_factors
+pv_loans <- loans * discount_factors 
+
+k1 <- sum(pv_loans)/sum(pv_payments)
+
+k <- k1 * payments
+k
+```
+
+
+Q3 a.
+Since there is no mention about compounding of interest rate, we examine two different cases: non-compounding and monthly compounding.
+First, if the interest is not compounding,
+```{r}
+i<-0.055
+r1<-i/12
+number_payment<-15*12
+payment<-c(0, rep(1,number_payment))
+discount_factor<-(1+r1)^(-(0:number_payment))
+PV_payment<-payment*discount_factor
+K<-150000/sum(PV_payment); K
+```
+The monthly payments should be $1225.625, so it matches the result from Bloomberg Mortgage Calculator.
+
+If the interest is monthly compounding,
+```{r}
+i<-0.055
+r2<-(1+i)^(1/12)-1
+number_payment<-15*12
+payment<-c(0, rep(1,number_payment))
+discount_factor<-(1+r2)^(-(0:number_payment))
+PV_payment<-payment*discount_factor
+K<-150000/sum(PV_payment); K
+```
+we have a different result, $1214.988.
+
+Q3 b.
+Here, we examine the two cases again. Also, since the first payment date is set as Sepember in the provided benchmark, we follow the same timeline.
+
+With non-compounding interest rate, we get:
+```{r}
+library(FinancialMath)
+amortization<-amort.table(Loan=150000, n=number_payment, i=r1)
+amort<-data.frame(amortization$Schedule)
+x<-4
+year<-1
+while(x<=180){
+  cat("The balance at the end of year", year, "=", amort[x, 4], "\n")
+  year<-year+1
+  x<-x+12
+  }
+```
+It shows the result just as same as the benchmark. Therefore, if the given annual interest rate is meant to be non-compounding, the Bloomberg Mortgage Calculator is indeed correct.
+
+Now we examine the second case with monthly compounding interest rate.
+```{r}
+amortization<-amort.table(Loan=150000, n=number_payment, i=r2)
+amort<-data.frame(amortization$Schedule)
+x<-4
+year<-1
+while(x<=180){
+  cat("The balance at the end of year", year, "=", amort[x, 4], "\n")
+  year<-year+1
+  x<-x+12
+}
+```
+As expected, we have a different results than those from the benchmark.
